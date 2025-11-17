@@ -738,17 +738,8 @@
                         adminPlayAgainContainer.style.display = 'none';
                     }
 
-                    // 5 soniya natijani ko'rsatgandan keyin lobbyga qaytish
-                    setTimeout(() => {
-                        showScreen(lobbyScreen);
-                        // Adminlikka qarab mos tugmani ko'rsatish
-                        if (isAdmin) {
-                            startRoundContainer.style.display = 'flex';
-                        } else {
-                            startRoundContainer.style.display = 'none';
-                        }
-                        adminPlayAgainContainer.style.display = 'none';
-                    }, 5000); // Lobbyga qaytishdan oldin 5 soniya natijani ko'rsatish
+                    // Natijalarni ko'rsatish tugadi, foydalanuvchi o'z xoxishi bilan lobbyga o'tadi
+                    // Avtomatik o'tish olib tashlandi
                     break;
 
                 case 'play_again':
