@@ -1,0 +1,367 @@
+/* Modern CSS reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.container {
+    max-width: 800px;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    color: #ff6b6b;
+    text-shadow: 0 0 10px rgba(255, 107, 107, 0.7);
+}
+
+header p {
+    font-size: 1.1rem;
+    opacity: 0.8;
+}
+
+.screen {
+    display: none;
+}
+
+.screen.active {
+    display: block;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 1.8rem;
+    color: #4ecdc4;
+}
+
+h3 {
+    color: #4ecdc4;
+    margin-bottom: 15px;
+}
+
+.home-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.option-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.option-container > p {
+    font-size: 1.2rem;
+    opacity: 0.8;
+}
+
+.join-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+#roomCodeInput, #playerNameInput {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 2px solid #4ecdc4;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    margin-bottom: 5px;
+}
+
+#roomCodeInput::placeholder, #playerNameInput::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.lobby-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 25px;
+}
+
+.players-section {
+    width: 100%;
+    max-width: 500px;
+}
+
+.players-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.player-item {
+    background: rgba(78, 205, 196, 0.3);
+    padding: 10px 15px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.player-item.ready {
+    background: rgba(106, 255, 127, 0.3);
+    border: 1px solid #6aff7f;
+}
+
+.player-item .status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ff6b6b;
+}
+
+.player-item.ready .status-indicator {
+    background: #6aff7f;
+}
+
+.lobby-actions {
+    display: flex;
+    gap: 15px;
+    width: 100%;
+    justify-content: center;
+}
+
+.game-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.number-input {
+    width: 100%;
+    max-width: 200px;
+    padding: 12px;
+    font-size: 1.1rem;
+    border-radius: 8px;
+    border: 2px solid #4ecdc4;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    text-align: center;
+}
+
+.number-input:focus {
+    outline: none;
+    border-color: #ff6b6b;
+    box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+}
+
+.waiting-indicator {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.waiting-players {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+}
+
+.waiting-player {
+    background: rgba(255, 107, 107, 0.3);
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+}
+
+.results-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.results-display {
+    width: 100%;
+    max-width: 500px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.results-display h3 {
+    margin: 15px 0 10px 0;
+    text-align: left;
+}
+
+.results-display div {
+    margin-bottom: 10px;
+    padding: 8px 0;
+    text-align: left;
+}
+
+.calculations p {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+}
+
+.label {
+    font-weight: bold;
+    color: #ff6b6b;
+}
+
+.numbers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.number-item {
+    background: rgba(255, 107, 107, 0.3);
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.number-item.winner {
+    background: rgba(106, 255, 127, 0.5);
+    animation: highlight 1s ease infinite alternate;
+}
+
+.winner-result {
+    font-size: 1.3rem;
+    font-weight: bold;
+    text-align: center;
+    padding: 15px;
+    border-radius: 8px;
+    background: rgba(78, 205, 196, 0.2);
+    margin: 15px 0;
+}
+
+.btn {
+    padding: 12px 25px;
+    font-size: 1rem;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: bold;
+    letter-spacing: 1px;
+    border: none;
+    min-width: 150px;
+}
+
+.btn-primary {
+    background: linear-gradient(to right, #ff6b6b, #4ecdc4);
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 2px solid #4ecdc4;
+}
+
+.btn-secondary:hover {
+    background: rgba(78, 205, 196, 0.2);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes highlight {
+    from { background: rgba(106, 255, 127, 0.5); }
+    to { background: rgba(106, 255, 127, 0.8); }
+}
+
+.connection-status {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 15px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    z-index: 1000;
+}
+
+.connected {
+    background: rgba(106, 255, 127, 0.3);
+    border: 1px solid #6aff7f;
+}
+
+.disconnected {
+    background: rgba(255, 107, 107, 0.3);
+    border: 1px solid #ff6b6b;
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 15px;
+    }
+    
+    header h1 {
+        font-size: 2rem;
+    }
+    
+    h2 {
+        font-size: 1.5rem;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        min-width: 120px;
+    }
+    
+    .option-container, .lobby-actions {
+        gap: 10px;
+    }
+    
+    .players-list, .waiting-players, .numbers-grid {
+        justify-content: center;
+    }
+    
+    .btn-primary, .btn-secondary {
+        width: 100%;
+    }
+}

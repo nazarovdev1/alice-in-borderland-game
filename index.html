@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>70% Raqam O'yini - Ko'p o'yinchi</title>
+    <style>
+        /* Zamonaviy CSS reset va asosiy stil */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #ff6b6b;
+            text-shadow: 0 0 10px rgba(255, 107, 107, 0.7);
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+            color: #4ecdc4;
+        }
+
+        h3 {
+            color: #4ecdc4;
+            margin-bottom: 15px;
+        }
+
+        .home-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .option-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .option-container > p {
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            font-size: 1rem;
+            border-radius: 8px;
+            border: 2px solid #4ecdc4;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        .input-field::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .lobby-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .players-section {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .players-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .player-item {
+            background: rgba(78, 205, 196, 0.3);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .player-status {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .player-name {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .player-wins {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .admin-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .kick-btn {
+            background: rgba(255, 107, 107, 0.5);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .kick-btn:hover {
+            background: rgba(255, 107, 107, 0.8);
+        }
+
+        .lobby-actions {
+            display: flex;
+            gap: 15px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .game-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .number-input {
+            width: 100%;
+            max-width: 200px;
+            padding: 12px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            border: 2px solid #4ecdc4;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-align: center;
+        }
+
+        .number-input:focus {
+            outline: none;
+            border-color: #ff6b6b;
+            box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+        }
+
+        .waiting-indicator {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .waiting-players {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .waiting-player {
+            background: rgba(255, 107, 107, 0.3);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+
+        .results-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .results-display {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .results-display h3 {
+            margin: 15px 0 10px 0;
+            text-align: left;
+        }
+
+        .results-display div {
+            margin-bottom: 10px;
+            padding: 8px 0;
+            text-align: left;
+        }
+
+        .calculations p {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+        }
+
+        .label {
+            font-weight: bold;
+            color: #ff6b6b;
+        }
+
+        .numbers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .number-item {
+            background: rgba(255, 107, 107, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .number-item.winner {
+            background: rgba(106, 255, 127, 0.5);
+            animation: highlight 1s ease infinite alternate;
+        }
+
+        .winner-result {
+            font-size: 1.3rem;
+            font-weight: bold;
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(78, 205, 196, 0.2);
+            margin: 15px 0;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            letter-spacing: 1px;
+            border: none;
+            min-width: 150px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(to right, #ff6b6b, #4ecdc4);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid #4ecdc4;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(78, 205, 196, 0.2);
+        }
+
+        .btn-danger {
+            background: rgba(255, 107, 107, 0.5);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: rgba(255, 107, 107, 0.8);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes highlight {
+            from { background: rgba(106, 255, 127, 0.5); }
+            to { background: rgba(106, 255, 127, 0.8); }
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            z-index: 1000;
+        }
+
+        .connected {
+            background: rgba(106, 255, 127, 0.3);
+            border: 1px solid #6aff7f;
+        }
+
+        .disconnected {
+            background: rgba(255, 107, 107, 0.3);
+            border: 1px solid #ff6b6b;
+        }
+
+        .admin-badge {
+            background: rgba(255, 215, 0, 0.3);
+            color: #ffd700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            margin-left: 5px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+
+            header h1 {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            .btn {
+                padding: 10px 20px;
+                min-width: 120px;
+            }
+
+            .option-container, .lobby-actions {
+                gap: 10px;
+            }
+
+            .players-list, .waiting-players, .numbers-grid {
+                justify-content: center;
+            }
+
+            .btn-primary, .btn-secondary {
+                width: 100%;
+            }
+
+            .player-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .admin-controls {
+                align-self: flex-end;
+                margin-top: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>70% Raqam O'yini</h1>
+            <p>Alice in Borderland asosidagi ko'p o'yinchi o'yin</p>
+        </header>
+
+        <main>
+            <!-- Bosh ekran - ism kiriting va xona yarating/qo'shiling -->
+            <section id="homeScreen" class="screen active">
+                <h2>70% Raqam O'yiniga Xush Kelibsiz</h2>
+                <div class="home-content">
+                    <div class="input-group">
+                        <input type="text" id="playerNameInput" class="input-field" placeholder="Ismingizni kiriting" maxlength="20">
+                    </div>
+                    <div class="option-container">
+                        <button id="createRoomBtn" class="btn btn-primary">Xona Yaratish</button>
+                        <p>yoki</p>
+                        <div class="input-group">
+                            <input type="text" id="roomCodeInput" class="input-field" placeholder="Xona Kodini Kiriting" maxlength="6">
+                            <button id="joinRoomBtn" class="btn btn-secondary">Xonaga Kirish</button>
+                        </div>
+                    </div>
+                    <div class="game-rules" style="margin-top: 20px; text-align: left; width: 100%; max-width: 400px; background: rgba(78, 205, 196, 0.1); padding: 15px; border-radius: 10px;">
+                        <h3>O'yin Qoidalari:</h3>
+                        <ul style="list-style-type: none; padding-left: 10px; margin-top: 10px;">
+                            <li>• 2-8 nafar o'yinchi bo'lishi mumkin</li>
+                            <li>• Har bir o'yinchi 0 dan 100 gacha raqam tanlaydi</li>
+                            <li>• Barcha raqamlar qo'shiladi</li>
+                            <li>• Yig'indi 0.7 ga ko'paytiriladi</li>
+                            <li>• Eng yaqin raqamga ega o'yinchi g'olib bo'ladi</li>
+                            <li>• Agar birdan ko'p o'yinchi bir xil masofada bo'lsa - durang</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Xona lobby ekrani -->
+            <section id="lobbyScreen" class="screen">
+                <h2>Xona: <span id="roomCodeDisplay"></span></h2>
+                <div class="lobby-content">
+                    <div class="players-section">
+                        <h3>Xonadagi O'yinchilar:</h3>
+                        <div id="playersList" class="players-list"></div>
+                    </div>
+
+                    <div id="startRoundContainer" class="lobby-actions" style="display: none;">
+                        <button id="startRoundBtn" class="btn btn-primary">O'yinni Boshlash</button>
+                    </div>
+
+                    <div id="playAgainContainer" class="lobby-actions" style="display: none;">
+                        <button id="playAgainBtn" class="btn btn-primary">Qayta O'ynash</button>
+                    </div>
+
+                    <div class="lobby-actions">
+                        <button id="leaveRoomBtn" class="btn btn-secondary">Xonadan Chiqish</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- O'yin ekrani - raqam tanlash -->
+            <section id="gameScreen" class="screen">
+                <h2>Raqamingizni Tanlang</h2>
+                <div class="game-content">
+                    <p>0 va 100 oralig'ida raqam tanlang:</p>
+                    <input type="number" id="numberInput" class="number-input" min="0" max="100" placeholder="0-100">
+                    <button id="submitNumberBtn" class="btn btn-primary">Raqamni Yuborish</button>
+
+                    <div class="waiting-indicator">
+                        <p>Boshqa o'yinchilarni kutyapmiz...</p>
+                        <div id="waitingPlayers" class="waiting-players"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Natijalar ekrani -->
+            <section id="resultsScreen" class="screen">
+                <h2>O'yin Natijalari</h2>
+                <div class="results-content">
+                    <div class="results-display">
+                        <h3>Tanlangan Raqamlar:</h3>
+                        <div id="numbersChosen" class="numbers-grid"></div>
+
+                        <h3>Hisoblash:</h3>
+                        <div class="calculations">
+                            <p><span class="label">Yig'indi:</span> <span id="sumResult"></span></p>
+                            <p><span class="label">Yig'indi × 0.7:</span> <span id="calculatedResult"></span></p>
+                        </div>
+
+                        <h3>G'olib:</h3>
+                        <div id="winnerResult" class="winner-result"></div>
+                    </div>
+
+                    <div id="adminPlayAgainContainer" style="display: none;">
+                        <button id="adminPlayAgainBtn" class="btn btn-primary">Qayta O'ynash</button>
+                    </div>
+
+                    <button id="backToLobbyBtn" class="btn btn-secondary">Lobbyga Qaytish</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // DOM Elementlar
+        const homeScreen = document.getElementById('homeScreen');
+        const lobbyScreen = document.getElementById('lobbyScreen');
+        const gameScreen = document.getElementById('gameScreen');
+        const resultsScreen = document.getElementById('resultsScreen');
+
+        // Bosh ekrandagi elementlar
+        const playerNameInput = document.getElementById('playerNameInput');
+        const roomCodeInput = document.getElementById('roomCodeInput');
+        const createRoomBtn = document.getElementById('createRoomBtn');
+        const joinRoomBtn = document.getElementById('joinRoomBtn');
+
+        // Lobby ekrandagi elementlar
+        const roomCodeDisplay = document.getElementById('roomCodeDisplay');
+        const playersList = document.getElementById('playersList');
+        const startRoundBtn = document.getElementById('startRoundBtn');
+        const playAgainBtn = document.getElementById('playAgainBtn');
+        const leaveRoomBtn = document.getElementById('leaveRoomBtn');
+        const startRoundContainer = document.getElementById('startRoundContainer');
+        const playAgainContainer = document.getElementById('playAgainContainer');
+
+        // O'yin ekrandagi elementlar
+        const numberInput = document.getElementById('numberInput');
+        const submitNumberBtn = document.getElementById('submitNumberBtn');
+        const waitingPlayers = document.getElementById('waitingPlayers');
+
+        // Natijalar ekrandagi elementlar
+        const numbersChosen = document.getElementById('numbersChosen');
+        const sumResult = document.getElementById('sumResult');
+        const calculatedResult = document.getElementById('calculatedResult');
+        const winnerResult = document.getElementById('winnerResult');
+        const adminPlayAgainBtn = document.getElementById('adminPlayAgainBtn');
+        const backToLobbyBtn = document.getElementById('backToLobbyBtn');
+        const adminPlayAgainContainer = document.getElementById('adminPlayAgainContainer');
+
+        // O'yin holati
+        let ws = null;
+        let currentRoomCode = null;
+        let currentPlayerId = null;
+        let currentPlayerName = '';
+        let isAdmin = false;
+        let players = {};
+        let myPlayerInfo = null;
+
+        // O'yinni ishga tushirish
+        function initGame() {
+            setupEventListeners();
+            connectToServer();
+        }
+
+        // Hodisa kuzatuvchilarni sozlash
+        function setupEventListeners() {
+            // Bosh ekran
+            createRoomBtn.addEventListener('click', createRoom);
+            joinRoomBtn.addEventListener('click', joinRoom);
+
+            // Lobby ekran
+            startRoundBtn.addEventListener('click', startRound);
+            playAgainBtn.addEventListener('click', playAgain);
+            leaveRoomBtn.addEventListener('click', leaveRoom);
+
+            // O'yin ekran
+            submitNumberBtn.addEventListener('click', submitNumber);
+            numberInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    submitNumber();
+                }
+            });
+
+            // Natijalar ekran
+            adminPlayAgainBtn.addEventListener('click', playAgain);
+            backToLobbyBtn.addEventListener('click', goToLobby);
+        }
+
+        // WebSocket serverga ulanish
+        function connectToServer() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}`;
+
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = function(event) {
+                console.log('WebSocket serverga ulanildi');
+                updateConnectionStatus(true);
+            };
+
+            ws.onmessage = function(event) {
+                const message = JSON.parse(event.data);
+                handleMessage(message);
+            };
+
+            ws.onclose = function(event) {
+                console.log('WebSocket serverdan uzildi');
+                updateConnectionStatus(false);
+
+                // Qayta ulanishga harakat qilish
+                setTimeout(connectToServer, 3000);
+            };
+
+            ws.onerror = function(error) {
+                console.error('WebSocket xatosi:', error);
+                updateConnectionStatus(false);
+            };
+        }
+
+        // Ulanish holatini yangilash
+        function updateConnectionStatus(connected) {
+            let statusElement = document.querySelector('.connection-status');
+            if (!statusElement) {
+                statusElement = document.createElement('div');
+                statusElement.className = 'connection-status disconnected';
+                statusElement.textContent = 'Ulanmagan';
+                document.body.appendChild(statusElement);
+            }
+
+            if (connected) {
+                statusElement.className = 'connection-status connected';
+                statusElement.textContent = 'Ulangan';
+            } else {
+                statusElement.className = 'connection-status disconnected';
+                statusElement.textContent = 'Ulanmagan';
+            }
+        }
+
+        // Serverga xabar yuborish
+        function sendMessage(message) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify(message));
+            } else {
+                console.error('WebSocket ulanmagan');
+            }
+        }
+
+        // Serverdan kelgan xabarlarni qayta ishlash
+        function handleMessage(message) {
+            switch(message.type) {
+                case 'room_created':
+                    currentRoomCode = message.roomCode;
+                    currentPlayerId = message.playerId;
+                    currentPlayerName = message.playerName;
+                    players = message.players;
+                    isAdmin = true;
+                    roomCodeDisplay.textContent = currentRoomCode;
+                    updatePlayersList();
+                    showScreen(lobbyScreen);
+                    startRoundContainer.style.display = 'flex';
+                    playAgainContainer.style.display = 'none';
+                    break;
+
+                case 'room_joined':
+                    currentRoomCode = message.roomCode;
+                    currentPlayerId = message.playerId;
+                    currentPlayerName = message.playerName;
+                    players = message.players;
+                    isAdmin = false;
+                    roomCodeDisplay.textContent = currentRoomCode;
+                    updatePlayersList();
+                    showScreen(lobbyScreen);
+                    startRoundContainer.style.display = 'none';
+                    playAgainContainer.style.display = 'none';
+                    break;
+
+                case 'player_joined':
+                    players = message.players;
+                    updatePlayersList();
+                    break;
+
+                case 'player_left':
+                    delete players[message.playerId];
+                    updatePlayersList();
+                    break;
+
+                case 'player_kicked':
+                    players = message.players;
+                    updatePlayersList();
+                    break;
+
+                case 'round_started':
+                    players = message.players;
+                    showScreen(gameScreen);
+                    // Yangi o'yin uchun input maydoni va tugmani faollashtirish
+                    numberInput.disabled = false;
+                    submitNumberBtn.disabled = false;
+                    submitNumberBtn.textContent = 'Raqamni Yuborish';
+                    numberInput.value = ''; // Input maydonini tozalash
+                    resetGameScreen();
+                    break;
+
+                case 'number_submitted':
+                    players = message.players;
+                    updateWaitingPlayers(message.playerId);
+                    break;
+
+                case 'round_result':
+                    players = message.players;
+                    displayRoundResult(message.result);
+                    showScreen(resultsScreen);
+
+                    // Faqat admin bo'lsa boshqaruv tugmalarini ko'rsatish
+                    if (isAdmin) {
+                        adminPlayAgainContainer.style.display = 'block';
+                    } else {
+                        adminPlayAgainContainer.style.display = 'none';
+                    }
+
+                    // 5 soniya natijani ko'rsatgandan keyin lobbyga qaytish
+                    setTimeout(() => {
+                        showScreen(lobbyScreen);
+                        // Adminlikka qarab mos tugmani ko'rsatish
+                        if (isAdmin) {
+                            startRoundContainer.style.display = 'flex';
+                        } else {
+                            startRoundContainer.style.display = 'none';
+                        }
+                        adminPlayAgainContainer.style.display = 'none';
+                    }, 5000); // Lobbyga qaytishdan oldin 5 soniya natijani ko'rsatish
+                    break;
+
+                case 'play_again':
+                    players = message.players;
+                    updatePlayersList();
+                    showScreen(lobbyScreen);
+                    startRoundContainer.style.display = isAdmin ? 'flex' : 'none';
+                    playAgainContainer.style.display = 'none';
+                    adminPlayAgainContainer.style.display = 'none';
+                    break;
+
+                case 'kicked':
+                    alert(message.message);
+                    goToHome();
+                    break;
+
+                case 'error':
+                    alert(message.message);
+                    break;
+            }
+        }
+
+        // Yangi xona yaratish
+        function createRoom() {
+            const playerName = playerNameInput.value.trim();
+            if (!playerName) {
+                alert('Iltimos, ismingizni kiriting');
+                return;
+            }
+
+            sendMessage({
+                type: 'create_room',
+                playerName: playerName
+            });
+        }
+
+        // Mavjud xonaga qo'shilish
+        function joinRoom() {
+            const roomCode = roomCodeInput.value.trim().toUpperCase();
+            const playerName = playerNameInput.value.trim();
+
+            if (!roomCode) {
+                alert('Iltimos, xona kodini kiriting');
+                return;
+            }
+
+            if (!playerName) {
+                alert('Iltimos, ismingizni kiriting');
+                return;
+            }
+
+            sendMessage({
+                type: 'join_room',
+                roomCode: roomCode,
+                playerName: playerName
+            });
+        }
+
+        // Yangi o'yinni boshlash
+        function startRound() {
+            sendMessage({
+                type: 'start_round',
+                roomCode: currentRoomCode
+            });
+        }
+
+        // Qayta o'ynash (faqat admin)
+        function playAgain() {
+            sendMessage({
+                type: 'play_again',
+                roomCode: currentRoomCode
+            });
+        }
+
+        // Joriy xonadan chiqish
+        function leaveRoom() {
+            goToHome();
+        }
+
+        // Natijalar ekrandan lobbyga qaytish
+        function goToLobby() {
+            showScreen(lobbyScreen);
+            playAgainContainer.style.display = 'none';
+            startRoundContainer.style.display = isAdmin ? 'flex' : 'none';
+            adminPlayAgainContainer.style.display = 'none';
+        }
+
+        // Maxsus ekran ko'rsatish
+        function showScreen(screenElement) {
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(screen => screen.classList.remove('active'));
+            screenElement.classList.add('active');
+        }
+
+        // Lobbydagi o'yinchilar ro'yxatini yangilash
+        function updatePlayersList() {
+            playersList.innerHTML = '';
+
+            for (const [playerId, playerData] of Object.entries(players)) {
+                const playerElement = document.createElement('div');
+                playerElement.className = 'player-item';
+
+                const playerInfo = document.createElement('div');
+                playerInfo.className = 'player-info';
+
+                const playerStatus = document.createElement('div');
+                playerStatus.className = 'player-status';
+
+                const playerName = document.createElement('div');
+                playerName.className = 'player-name';
+                playerName.textContent = playerData.name;
+
+                // Agar bu admin bo'lsa admin belgisini qo'shish
+                if (playerId === currentPlayerId && isAdmin) {
+                    const adminBadge = document.createElement('span');
+                    adminBadge.className = 'admin-badge';
+                    adminBadge.textContent = 'ADMIN';
+                    playerName.appendChild(adminBadge);
+                }
+
+                const playerWins = document.createElement('div');
+                playerWins.className = 'player-wins';
+                playerWins.textContent = `G'alib: ${playerData.wins}`;
+
+                playerStatus.appendChild(playerName);
+                playerStatus.appendChild(playerWins);
+                playerInfo.appendChild(playerStatus);
+
+                // Agar foydalanuvchi admin bo'lsa va o'zini chetlatmasa chetlatish tugmasi qo'shish
+                if (isAdmin && playerId !== currentPlayerId) {
+                    const adminControls = document.createElement('div');
+                    adminControls.className = 'admin-controls';
+
+                    const kickBtn = document.createElement('button');
+                    kickBtn.className = 'kick-btn';
+                    kickBtn.textContent = 'Chetlatish';
+                    kickBtn.onclick = function() {
+                        if (confirm(`${playerData.name} ishimni chetlatishni xohlaysizmi?`)) {
+                            sendMessage({
+                                type: 'kick_player',
+                                playerId: playerId,
+                                roomCode: currentRoomCode
+                            });
+                        }
+                    };
+
+                    adminControls.appendChild(kickBtn);
+                    playerElement.appendChild(adminControls);
+                }
+
+                playerElement.appendChild(playerInfo);
+                playersList.appendChild(playerElement);
+            }
+        }
+
+        // O'yin ekranini qayta o'rnatish
+        function resetGameScreen() {
+            numberInput.value = '';
+            waitingPlayers.innerHTML = '';
+
+            // Hozirgi o'yinchidan tashqari barcha o'yinchilarni kutyapdi sifatida ko'rsatish
+            for (const [playerId, playerData] of Object.entries(players)) {
+                if (playerId !== currentPlayerId) { // Hozirgi o'yinchi kutyapdi sifatida ko'rsatilmasin
+                    const waitingElement = document.createElement('div');
+                    waitingElement.className = 'waiting-player';
+                    waitingElement.id = `waiting-${playerId}`;
+                    waitingElement.textContent = playerData.name;
+                    waitingPlayers.appendChild(waitingElement);
+                }
+            }
+        }
+
+        // Tanlangan raqamni yuborish
+        function submitNumber() {
+            const number = parseInt(numberInput.value);
+
+            if (isNaN(number) || number < 0 || number > 100) {
+                alert('Iltimos, 0 va 100 oralig\'ida to\'g\'ri raqam kiriting');
+                return;
+            }
+
+            sendMessage({
+                type: 'number_chosen',
+                playerId: currentPlayerId,
+                roomCode: currentRoomCode,
+                number: number
+            });
+
+            // Yuborishdan keyin input maydoni va tugmani o'chirish
+            numberInput.disabled = true;
+            submitNumberBtn.disabled = true;
+            submitNumberBtn.textContent = 'Yuborildi!';
+        }
+
+        // Kutyapgan o'yinchilarni yangilash
+        function updateWaitingPlayers(playerId) {
+            const waitingElement = document.getElementById(`waiting-${playerId}`);
+            if (waitingElement) {
+                waitingElement.style.opacity = '0.5';
+                waitingElement.style.textDecoration = 'line-through';
+            }
+        }
+
+        // O'yin natijalarini ko'rsatish
+        function displayRoundResult(result) {
+            numbersChosen.innerHTML = '';
+
+            // Barcha raqamlarni g'oliblarni ajratib gina ko'rsatish
+            result.numbers.forEach((number, index) => {
+                const playerIds = Object.keys(players);
+                const playerId = playerIds[index];
+
+                const numberElement = document.createElement('div');
+                numberElement.className = `number-item ${result.winnerPlayerIds.includes(playerId) ? 'winner' : ''}`;
+                numberElement.textContent = `${players[playerId].name}: ${number}`;
+                numbersChosen.appendChild(numberElement);
+            });
+
+            // Hisoblash natijalarini ko'rsatish
+            sumResult.textContent = result.sum;
+            calculatedResult.textContent = result.target.toFixed(2);
+
+            // G'olib(lar)ni ko'rsatish
+            if (result.winnerPlayerIds.length > 1) {
+                // Durang holati
+                const playerNames = result.winnerPlayerIds.map(playerId => players[playerId].name).join(' va ');
+                winnerResult.textContent = `${playerNames} o'rtasida durang!`;
+            } else {
+                // Bitta g'olib
+                const winnerId = result.winnerPlayerIds[0];
+                winnerResult.textContent = `${players[winnerId].name} g'olib!`;
+            }
+        }
+
+        // Bosh ekranga qaytish
+        function goToHome() {
+            currentRoomCode = null;
+            currentPlayerId = null;
+            currentPlayerName = '';
+            isAdmin = false;
+            players = {};
+            showScreen(homeScreen);
+        }
+
+        // Sahifa yuklanganda o'yinni ishga tushirish
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>
