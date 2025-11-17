@@ -1,54 +1,27 @@
 const WebSocket = require('ws');
+const express = require('express');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-// Create an HTTP server to serve the client files
-const server = http.createServer((req, res) => {
-    let filePath = '.' + req.url;
-    if (filePath === './') {
-        filePath = './index.html';
-    }
+// Create Express app
+const app = express();
 
-    const extname = path.extname(filePath);
-    let contentType = 'text/html';
-    
-    switch (extname) {
-        case '.js':
-            contentType = 'text/javascript';
-            break;
-        case '.css':
-            contentType = 'text/css';
-            break;
-        case '.json':
-            contentType = 'application/json';
-            break;
-        case '.png':
-            contentType = 'image/png';
-            break;
-        case '.jpg':
-            contentType = 'image/jpg';
-            break;
-        case '.wav':
-            contentType = 'audio/wav';
-            break;
-    }
+// Serve static files
+app.use(express.static(path.join(__dirname)));
 
-    fs.readFile(filePath, (err, content) => {
-        if (err) {
-            if (err.code === 'ENOENT') {
-                res.writeHead(404);
-                res.end('404 Not Found');
-            } else {
-                res.writeHead(500);
-                res.end(`Server Error: ${err.code}`);
-            }
-        } else {
-            res.writeHead(200, { 'Content-Type': contentType });
-            res.end(content, 'utf-8');
-        }
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.status(200).json({ 
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        webSocketConnections: wss ? wss.clients.size : 0
     });
 });
+
+// Create HTTP server
+const server = http.createServer(app);
 
 // Create WebSocket server
 const wss = new WebSocket.Server({ server: server });
@@ -289,7 +262,7 @@ wss.on('connection', (ws, req) => {
                                 players: rooms[numberRoomCode].players // Include updated win counts
                             });
                             
-                            // Reset for next round but keep wins (players keep their win counts)
+                            // Reset for next round (but keep wins)
                             Object.keys(rooms[numberRoomCode].players).forEach(playerId => {
                                 rooms[numberRoomCode].players[playerId].number = null;
                             });
@@ -306,12 +279,12 @@ wss.on('connection', (ws, req) => {
                     break;
                     
                 case 'play_again':
-                    const { roomCode: playAgainRoomCode } = message;
+                    const { roomCode: restartRoomCode } = message;
                     
-                    if (!rooms[playAgainRoomCode]) return;
+                    if (!rooms[restartRoomCode]) return;
                     
                     // Check if this is the admin
-                    if (rooms[playAgainRoomCode].adminId !== ws) {
+                    if (rooms[restartRoomCode].adminId !== ws) {
                         ws.send(JSON.stringify({
                             type: 'error',
                             message: 'Only admin can start the next round'
@@ -319,21 +292,20 @@ wss.on('connection', (ws, req) => {
                         return;
                     }
                     
-                    // Reset all players' numbers and ready status for the new round
-                    Object.keys(rooms[playAgainRoomCode].players).forEach(playerId => {
-                        rooms[playAgainRoomCode].players[playerId].number = null;
-                        rooms[playAgainRoomCode].players[playerId].isReady = false;
+                    // Reset all players' numbers for the new round (but keep wins)
+                    Object.keys(rooms[restartRoomCode].players).forEach(playerId => {
+                        rooms[restartRoomCode].players[playerId].number = null;
                     });
                     
-                    rooms[playAgainRoomCode].status = 'waiting';
+                    rooms[restartRoomCode].status = 'waiting';
                     
-                    // Notify all players that we're back to lobby
-                    broadcastToRoom(playAgainRoomCode, {
+                    // Notify all players that we're ready for a new round
+                    broadcastToRoom(restartRoomCode, {
                         type: 'play_again',
-                        players: rooms[playAgainRoomCode].players
+                        players: rooms[restartRoomCode].players
                     });
                     
-                    console.log(`Play again initiated in room ${playAgainRoomCode}`);
+                    console.log(`Play again initiated in room ${restartRoomCode}`);
                     break;
                     
                 case 'kick_player':
@@ -390,36 +362,6 @@ wss.on('connection', (ws, req) => {
                     }
                     
                     console.log(`Player ${kickPlayerId} was kicked from room ${kickRoomCode}`);
-                    break;
-
-                case 'play_again':
-                    const { roomCode: restartRoomCode } = message;
-
-                    if (!rooms[restartRoomCode]) return;
-
-                    // Check if this is the admin
-                    if (rooms[restartRoomCode].adminId !== ws) {
-                        ws.send(JSON.stringify({
-                            type: 'error',
-                            message: 'Only admin can start the next round'
-                        }));
-                        return;
-                    }
-
-                    // Reset all players' numbers for the new round (but keep wins)
-                    Object.keys(rooms[restartRoomCode].players).forEach(playerId => {
-                        rooms[restartRoomCode].players[playerId].number = null;
-                    });
-
-                    rooms[restartRoomCode].status = 'waiting';
-
-                    // Notify all players that we're ready for a new round
-                    broadcastToRoom(restartRoomCode, {
-                        type: 'play_again',
-                        players: rooms[restartRoomCode].players
-                    });
-
-                    console.log(`Play again initiated in room ${restartRoomCode}`);
                     break;
             }
         } catch (error) {
@@ -483,9 +425,39 @@ wss.on('connection', (ws, req) => {
     });
 });
 
-const PORT = 8080;
+// Self-ping mechanism to prevent Render from idling
+function setupSelfPing() {
+    // Disable self-ping in development
+    if (process.env.NODE_ENV === 'development' || process.env.IS_LOCAL) {
+        console.log('Self-ping disabled in development');
+        return;
+    }
+    
+    const selfPingUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${process.env.PORT || 8080}`;
+    
+    setInterval(async () => {
+        try {
+            const response = await fetch(`${selfPingUrl}/health`);
+            if (response.ok) {
+                console.log(`Self-ping successful: ${new Date().toISOString()}`);
+            } else {
+                console.error(`Self-ping failed with status: ${response.status}`);
+            }
+        } catch (error) {
+            console.error(`Self-ping error: ${error.message}`);
+        }
+    }, 240000); // Ping every 4 minutes (240000 ms)
+    
+    console.log('Self-ping mechanism initialized');
+}
+
+// Setup self-pinging
+setupSelfPing();
+
+// Start server on Render's assigned port
+const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
-    console.log(`Connect to ws://localhost:${PORT} for WebSocket connections`);
-    console.log(`Access the game at http://localhost:${PORT}`);
+    console.log(`Health check available at: http://localhost:${PORT}/health`);
+    console.log(`WebSocket connections available at: ws://localhost:${PORT}`);
 });
