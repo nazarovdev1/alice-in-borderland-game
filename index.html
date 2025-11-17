@@ -583,6 +583,7 @@
         let isAdmin = false;
         let players = {};
         let myPlayerInfo = null;
+        let isEliminated = false;
 
         // O'yinni ishga tushirish
         function initGame() {
@@ -719,6 +720,11 @@
                     
                 case 'round_started':
                     players = message.players;
+                    // Prevent eliminated players from going to game screen
+                    if (isEliminated) {
+                        // Stay on the current screen for eliminated players
+                        break;
+                    }
                     showScreen(gameScreen);
                     // Yangi o'yin uchun input maydoni va tugmani faollashtirish
                     numberInput.disabled = false;
@@ -737,14 +743,19 @@
                     players = message.players;
                     displayRoundResult(message.result);
                     showScreen(resultsScreen);
-                    
+
+                    // Check if the current player was eliminated in this round
+                    if (message.result.eliminatedPlayerId === currentPlayerId) {
+                        isEliminated = true; // Mark this player as eliminated
+                    }
+
                     // Faqat admin bo'lsa boshqaruv tugmalarini ko'rsatish
-                    if (isAdmin) {
+                    if (isAdmin && !isEliminated) {
                         adminPlayAgainContainer.style.display = 'block';
                     } else {
                         adminPlayAgainContainer.style.display = 'none';
                     }
-                    
+
                     // Natijalarni ko'rsatish tugadi, foydalanuvchi o'z xoxishi bilan lobbyga o'tadi
                     // Avtomatik o'tish olib tashlandi
                     break;
@@ -752,10 +763,16 @@
                 case 'play_again':
                     players = message.players;
                     updatePlayersList();
-                    showScreen(lobbyScreen);
-                    startRoundContainer.style.display = isAdmin ? 'flex' : 'none';
-                    playAgainContainer.style.display = 'none';
-                    adminPlayAgainContainer.style.display = 'none';
+                    // Only show lobby if not eliminated
+                    if (!isEliminated) {
+                        showScreen(lobbyScreen);
+                        startRoundContainer.style.display = isAdmin ? 'flex' : 'none';
+                        playAgainContainer.style.display = 'none';
+                        adminPlayAgainContainer.style.display = 'none';
+                    } else {
+                        // If eliminated, stay on results screen and disable admin controls
+                        adminPlayAgainContainer.style.display = 'none';
+                    }
                     break;
                     
                 case 'kicked':
@@ -766,7 +783,12 @@
                 case 'eliminated':
                     // Chiqarilgan o'yinchi uchun xabar ko'rsatish
                     alert(message.message + `\nTo'g'ri javob: ${message.target.toFixed(2)}`);
-                    goToHome();
+                    // Mark player as eliminated
+                    isEliminated = true;
+                    // Show results screen to the eliminated player
+                    showScreen(resultsScreen);
+                    // The eliminated player should remain on the results screen to see the outcome
+                    // They should not be able to participate in the next round
                     break;
                     
                 case 'error':
@@ -813,6 +835,12 @@
 
         // Yangi o'yinni boshlash
         function startRound() {
+            // Prevent eliminated players from starting rounds
+            if (isEliminated) {
+                alert('Siz o\'yindan chiqarilgansiz va yangi o\'yinni boshlay olmaysiz!');
+                return;
+            }
+
             sendMessage({
                 type: 'start_round',
                 roomCode: currentRoomCode
@@ -821,6 +849,12 @@
 
         // Qayta o'ynash (faqat admin)
         function playAgain() {
+            // Prevent eliminated players from starting play again
+            if (isEliminated) {
+                alert('Siz o\'yindan chiqarilgansiz va qayta o\'ynay olmaysiz!');
+                return;
+            }
+
             sendMessage({
                 type: 'play_again',
                 roomCode: currentRoomCode
@@ -829,11 +863,24 @@
 
         // Joriy xonadan chiqish
         function leaveRoom() {
-            goToHome();
+            // If player is eliminated, they should already be prevented from participating
+            if (isEliminated) {
+                alert('Siz allaqachon o\'yindan chiqarilgansiz');
+                goToHome();
+            } else {
+                goToHome();
+            }
         }
 
         // Natijalar ekrandan lobbyga qaytish
         function goToLobby() {
+            // Prevent eliminated players from going back to lobby to participate
+            if (isEliminated) {
+                alert('Siz o\'yindan chiqarilgansiz, shuning uchun yangi o\'yinlarga qatnasha olmaysiz');
+                // Stay on results screen but allow viewing
+                return;
+            }
+
             showScreen(lobbyScreen);
             playAgainContainer.style.display = 'none';
             startRoundContainer.style.display = isAdmin ? 'flex' : 'none';
@@ -927,20 +974,26 @@
 
         // Tanlangan raqamni yuborish
         function submitNumber() {
+            // Prevent eliminated players from submitting numbers
+            if (isEliminated) {
+                alert('Siz o\'yindan chiqarilgansiz va raqam tanlay olmaysiz!');
+                return;
+            }
+
             const number = parseInt(numberInput.value);
-            
+
             if (isNaN(number) || number < 0 || number > 100) {
                 alert('Iltimos, 0 va 100 oralig\'ida to\'g\'ri raqam kiriting');
                 return;
             }
-            
+
             sendMessage({
                 type: 'number_chosen',
                 playerId: currentPlayerId,
                 roomCode: currentRoomCode,
                 number: number
             });
-            
+
             // Yuborishdan keyin input maydoni va tugmani o'chirish
             numberInput.disabled = true;
             submitNumberBtn.disabled = true;
@@ -1010,6 +1063,7 @@
             currentPlayerName = '';
             isAdmin = false;
             players = {};
+            isEliminated = false; // Reset eliminated status when going home
             showScreen(homeScreen);
         }
 

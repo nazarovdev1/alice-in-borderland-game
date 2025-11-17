@@ -255,11 +255,11 @@ wss.on('connection', (ws, req) => {
                     // Set the player's number
                     rooms[numberRoomCode].players[numberPlayerId].number = number;
                     
-                    // Check if all players have submitted their numbers
-                    const players = rooms[numberRoomCode].players;
-                    const allSubmitted = Object.keys(players).every(id => players[id].number !== null);
-                    
-                    if (allSubmitted) {
+                    // Check if all current players in the room have submitted their numbers
+                    const currentRoomPlayers = rooms[numberRoomCode].players;
+                    const allCurrentPlayersSubmitted = Object.keys(currentRoomPlayers).every(id => currentRoomPlayers[id].number !== null);
+
+                    if (allCurrentPlayersSubmitted) {
                         const result = calculateResult(numberRoomCode);
 
                         if (result) {
@@ -268,11 +268,28 @@ wss.on('connection', (ws, req) => {
                                 rooms[numberRoomCode].players[winnerId].wins += 1;
                             });
 
-                            // Remove the farthest player from the room
-                            if (result.eliminatedPlayerId) {
-                                const eliminatedPlayer = rooms[numberRoomCode].players[result.eliminatedPlayerId];
-                                if (eliminatedPlayer) {
-                                    // Notify the eliminated player
+                            // Check if there are still players in the room after elimination
+                            if (Object.keys(rooms[numberRoomCode].players).length > 0) {
+                                // Broadcast the result to all players (including eliminated one) before removal
+                                const playerIds = Object.keys(rooms[numberRoomCode].players);
+                                for (const playerId of playerIds) {
+                                    const player = rooms[numberRoomCode].players[playerId];
+
+                                    // Send round result to all players
+                                    player.ws.send(JSON.stringify({
+                                        type: 'round_result',
+                                        result: result,
+                                        players: rooms[numberRoomCode].players // Include updated win counts
+                                    }));
+                                }
+
+                                // Remove the farthest player from the room after sending results
+                                if (result.eliminatedPlayerId && rooms[numberRoomCode].players[result.eliminatedPlayerId]) {
+                                    const eliminatedPlayer = rooms[numberRoomCode].players[result.eliminatedPlayerId];
+                                    // Check if the eliminated player is the admin
+                                    const wasAdmin = (rooms[numberRoomCode].adminId === eliminatedPlayer.ws);
+
+                                    // Notify the eliminated player separately about their elimination
                                     eliminatedPlayer.ws.send(JSON.stringify({
                                         type: 'eliminated',
                                         message: 'Siz o\'yindan chiqarildingiz, chunki raqamingiz eng uzoq edi',
@@ -284,21 +301,24 @@ wss.on('connection', (ws, req) => {
 
                                     // Remove player from the room
                                     delete rooms[numberRoomCode].players[result.eliminatedPlayerId];
+
+                                    // If the eliminated player was admin, transfer admin rights to another player
+                                    if (wasAdmin && Object.keys(rooms[numberRoomCode].players).length > 0) {
+                                        const remainingPlayerIds = Object.keys(rooms[numberRoomCode].players);
+                                        const newAdminId = remainingPlayerIds[0];
+                                        rooms[numberRoomCode].adminId = rooms[numberRoomCode].players[newAdminId].ws;
+                                    }
                                 }
+
+                                // Reset for next round (but keep wins for remaining players)
+                                Object.keys(rooms[numberRoomCode].players).forEach(playerId => {
+                                    rooms[numberRoomCode].players[playerId].number = null;
+                                });
+                                rooms[numberRoomCode].status = 'waiting';
+                            } else {
+                                // If no players left, delete the room
+                                delete rooms[numberRoomCode];
                             }
-
-                            // Broadcast the result to remaining players
-                            broadcastToRoom(numberRoomCode, {
-                                type: 'round_result',
-                                result: result,
-                                players: rooms[numberRoomCode].players // Include updated win counts
-                            });
-
-                            // Reset for next round (but keep wins for remaining players)
-                            Object.keys(rooms[numberRoomCode].players).forEach(playerId => {
-                                rooms[numberRoomCode].players[playerId].number = null;
-                            });
-                            rooms[numberRoomCode].status = 'waiting';
                         }
                     } else {
                         // Notify others that this player has submitted
@@ -429,23 +449,88 @@ wss.on('connection', (ws, req) => {
                         room.adminId = room.players[newAdminId].ws;
                     }
                 }
-                
+
                 // Remove the player
                 delete room.players[playerIdToRemove];
-                
-                // If the room is now empty, delete it
-                if (Object.keys(room.players).length === 0) {
-                    delete rooms[roomCode];
-                    console.log(`Room ${roomCode} deleted (empty)`);
-                } else {
+
+                // Check if all remaining players have submitted their numbers
+                const allRemainingSubmitted = Object.keys(room.players).every(id => room.players[id].number !== null);
+
+                // If all remaining players have submitted numbers after someone left, calculate result
+                if (allRemainingSubmitted && Object.keys(room.players).length > 0) {
+                    const result = calculateResult(roomCode);
+                    if (result) {
+                        // Update wins for the winners
+                        result.winnerPlayerIds.forEach(winnerId => {
+                            rooms[roomCode].players[winnerId].wins += 1;
+                        });
+
+                        // Check if there are still players in the room after elimination
+                        if (Object.keys(rooms[roomCode].players).length > 0) {
+                            // Broadcast the result to all players (including eliminated one) before removal
+                            const playerIds = Object.keys(rooms[roomCode].players);
+                            for (const playerId of playerIds) {
+                                const player = rooms[roomCode].players[playerId];
+
+                                // Send round result to all players
+                                player.ws.send(JSON.stringify({
+                                    type: 'round_result',
+                                    result: result,
+                                    players: rooms[roomCode].players // Include updated win counts
+                                }));
+                            }
+
+                            // Remove the farthest player from the room after sending results
+                            if (result.eliminatedPlayerId && rooms[roomCode].players[result.eliminatedPlayerId]) {
+                                const eliminatedPlayer = rooms[roomCode].players[result.eliminatedPlayerId];
+                                // Check if the eliminated player is the admin
+                                const wasAdmin = (rooms[roomCode].adminId === eliminatedPlayer.ws);
+
+                                // Notify the eliminated player separately about their elimination
+                                eliminatedPlayer.ws.send(JSON.stringify({
+                                    type: 'eliminated',
+                                    message: 'Siz o\'yindan chiqarildingiz, chunki raqamingiz eng uzoq edi',
+                                    target: result.target
+                                }));
+
+                                // Close the eliminated player's connection
+                                eliminatedPlayer.ws.close();
+
+                                // Remove player from the room
+                                delete rooms[roomCode].players[result.eliminatedPlayerId];
+
+                                // If the eliminated player was admin, transfer admin rights to another player
+                                if (wasAdmin && Object.keys(rooms[roomCode].players).length > 0) {
+                                    const remainingPlayerIds = Object.keys(rooms[roomCode].players);
+                                    const newAdminId = remainingPlayerIds[0];
+                                    rooms[roomCode].adminId = rooms[roomCode].players[newAdminId].ws;
+                                }
+                            }
+
+                            // Reset for next round (but keep wins for remaining players)
+                            Object.keys(rooms[roomCode].players).forEach(playerId => {
+                                rooms[roomCode].players[playerId].number = null;
+                            });
+                            rooms[roomCode].status = 'waiting';
+                        } else {
+                            // If no players left, delete the room
+                            delete rooms[roomCode];
+                        }
+                    }
+                } else if (Object.keys(room.players).length > 0) {
+                    // If not all submitted, notify others that someone left
                     // Notify other players that someone left
                     broadcastToRoom(roomCode, {
                         type: 'player_left',
                         playerId: playerIdToRemove,
                         players: room.players
                     });
+                } else {
+                    // If room is now empty, delete it
+                    delete rooms[roomCode];
+                    console.log(`Room ${roomCode} deleted (empty)`);
                 }
-                
+
                 break; // Exit the loop since we found and removed the player
             }
         }
