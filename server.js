@@ -77,18 +77,20 @@ function calculateResult(roomId) {
         }
     }
 
-    // Identify players with numbers that are too far from target (lose automatically)
-    const threshold = 10; // Difference threshold - numbers more than 10 away are eliminated
-    const eliminatedIndices = [];
-    for (let i = 0; i < validNumbers.length; i++) {
+    // Find the player with the number farthest from target to eliminate
+    let maxDiff = Math.abs(validNumbers[0] - target);
+    let eliminatedIndex = 0;
+
+    for (let i = 1; i < validNumbers.length; i++) {
         const diff = Math.abs(validNumbers[i] - target);
-        if (diff > threshold) {
-            eliminatedIndices.push(i);
+        if (diff > maxDiff) {
+            maxDiff = diff;
+            eliminatedIndex = i;
         }
     }
 
-    // Winners are those closest to target AND not eliminated
-    const finalWinnerIndices = winnerIndices.filter(index => !eliminatedIndices.includes(index));
+    // Winners are those closest to target (excluding the eliminated player)
+    const finalWinnerIndices = winnerIndices.filter(index => index !== eliminatedIndex);
 
     return {
         numbers: validNumbers,
@@ -97,9 +99,9 @@ function calculateResult(roomId) {
         target: target,
         minDiff: minDiff,
         winnerIndices: finalWinnerIndices,
-        eliminatedIndices: eliminatedIndices,
+        eliminatedIndex: eliminatedIndex,
         winnerPlayerIds: finalWinnerIndices.map(index => playerIds[index]),
-        eliminatedPlayerIds: eliminatedIndices.map(index => playerIds[index])
+        eliminatedPlayerId: playerIds[eliminatedIndex]
     };
 }
 
@@ -266,14 +268,14 @@ wss.on('connection', (ws, req) => {
                                 rooms[numberRoomCode].players[winnerId].wins += 1;
                             });
 
-                            // Remove eliminated players from the room
-                            result.eliminatedPlayerIds.forEach(eliminatedId => {
-                                const eliminatedPlayer = rooms[numberRoomCode].players[eliminatedId];
+                            // Remove the farthest player from the room
+                            if (result.eliminatedPlayerId) {
+                                const eliminatedPlayer = rooms[numberRoomCode].players[result.eliminatedPlayerId];
                                 if (eliminatedPlayer) {
                                     // Notify the eliminated player
                                     eliminatedPlayer.ws.send(JSON.stringify({
                                         type: 'eliminated',
-                                        message: 'Siz o\'yindan chiqarildingiz, chunki raqamingiz juda uzoq edi',
+                                        message: 'Siz o\'yindan chiqarildingiz, chunki raqamingiz eng uzoq edi',
                                         target: result.target
                                     }));
 
@@ -281,9 +283,9 @@ wss.on('connection', (ws, req) => {
                                     eliminatedPlayer.ws.close();
 
                                     // Remove player from the room
-                                    delete rooms[numberRoomCode].players[eliminatedId];
+                                    delete rooms[numberRoomCode].players[result.eliminatedPlayerId];
                                 }
-                            });
+                            }
 
                             // Broadcast the result to remaining players
                             broadcastToRoom(numberRoomCode, {
