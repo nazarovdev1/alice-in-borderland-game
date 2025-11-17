@@ -455,10 +455,10 @@
                     <div class="game-rules" style="margin-top: 20px; text-align: left; width: 100%; max-width: 400px; background: rgba(78, 205, 196, 0.1); padding: 15px; border-radius: 10px;">
                         <h3>O'yin Qoidalari:</h3>
                         <ul style="list-style-type: none; padding-left: 10px; margin-top: 10px;">
-                            <li>• 2-8 nafar o'yinchi bo'lishi mumkin</li>
+                            <li>• Ixtiyoriy miqdordagi o'yinchi bo'lishi mumkin</li>
                             <li>• Har bir o'yinchi 0 dan 100 gacha raqam tanlaydi</li>
-                            <li>• Barcha raqamlar qo'shiladi</li>
-                            <li>• Yig'indi 0.7 ga ko'paytiriladi</li>
+                            <li>• Barcha raqamlarning o'rtachasi hisoblanadi</li>
+                            <li>• O'rtacha qiymat 0.8 ga ko'paytiriladi</li>
                             <li>• Eng yaqin raqamga ega o'yinchi g'olib bo'ladi</li>
                             <li>• Agar birdan ko'p o'yinchi bir xil masofada bo'lsa - durang</li>
                         </ul>
@@ -515,7 +515,8 @@
                         <h3>Hisoblash:</h3>
                         <div class="calculations">
                             <p><span class="label">Yig'indi:</span> <span id="sumResult"></span></p>
-                            <p><span class="label">Yig'indi × 0.7:</span> <span id="calculatedResult"></span></p>
+                            <p><span class="label">O'rtacha:</span> <span id="averageResult"></span></p>
+                            <p><span class="label">O'rtacha × 0.8:</span> <span id="calculatedResult"></span></p>
                         </div>
 
                         <h3>G'olib:</h3>
@@ -562,6 +563,7 @@
         // Natijalar ekrandagi elementlar
         const numbersChosen = document.getElementById('numbersChosen');
         const sumResult = document.getElementById('sumResult');
+        const averageResult = document.getElementById('averageResult');
         const calculatedResult = document.getElementById('calculatedResult');
         const winnerResult = document.getElementById('winnerResult');
         const adminPlayAgainBtn = document.getElementById('adminPlayAgainBtn');
@@ -960,6 +962,7 @@
 
             // Hisoblash natijalarini ko'rsatish
             sumResult.textContent = result.sum;
+            averageResult.textContent = result.average.toFixed(2);
             calculatedResult.textContent = result.target.toFixed(2);
 
             // G'olib(lar)ni ko'rsatish

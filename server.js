@@ -49,25 +49,26 @@ function broadcastToRoom(roomId, message, excludeClient = null) {
 // Calculate the game result
 function calculateResult(roomId) {
     if (!rooms[roomId] || Object.keys(rooms[roomId].players).length === 0) return null;
-    
+
     const players = rooms[roomId].players;
     const playerIds = Object.keys(players);
     const numbers = playerIds.map(id => players[id].number);
-    
+
     // Filter out any null/undefined numbers (shouldn't happen if all players submitted)
     const validNumbers = numbers.filter(num => num !== null && num !== undefined);
     if (validNumbers.length !== playerIds.length) return null;
-    
+
     const sum = validNumbers.reduce((acc, num) => acc + num, 0);
-    const target = sum * 0.7;
-    
+    const average = sum / validNumbers.length; // Calculate average
+    const target = average * 0.8; // Multiply by 0.8 instead of 0.7
+
     // Find the winner
     let minDiff = Math.abs(validNumbers[0] - target);
     let winnerIndices = [0]; // Store indices of winners
-    
+
     for (let i = 1; i < validNumbers.length; i++) {
         const diff = Math.abs(validNumbers[i] - target);
-        
+
         if (diff < minDiff) {
             minDiff = diff;
             winnerIndices = [i]; // Reset winner indices
@@ -75,10 +76,11 @@ function calculateResult(roomId) {
             winnerIndices.push(i); // Add to winner indices for tie
         }
     }
-    
+
     return {
         numbers: validNumbers,
         sum: sum,
+        average: average,
         target: target,
         winnerIndices: winnerIndices,
         winnerPlayerIds: winnerIndices.map(index => playerIds[index])
@@ -142,14 +144,7 @@ wss.on('connection', (ws, req) => {
                         return;
                     }
                     
-                    // Check if room is full (max 8 players)
-                    if (Object.keys(rooms[joinRoomCode].players).length >= 8) {
-                        ws.send(JSON.stringify({
-                            type: 'error',
-                            message: 'Room is full'
-                        }));
-                        return;
-                    }
+                    // O'yinchi cheklovi olib tashlandi - cheksiz o'yinchi qo'shish mumkin
                     
                     // Check if name is already taken
                     const existingNames = Object.values(rooms[joinRoomCode].players).map(p => p.name);
