@@ -77,13 +77,29 @@ function calculateResult(roomId) {
         }
     }
 
+    // Identify players with numbers that are too far from target (lose automatically)
+    const threshold = 10; // Difference threshold - numbers more than 10 away are eliminated
+    const eliminatedIndices = [];
+    for (let i = 0; i < validNumbers.length; i++) {
+        const diff = Math.abs(validNumbers[i] - target);
+        if (diff > threshold) {
+            eliminatedIndices.push(i);
+        }
+    }
+
+    // Winners are those closest to target AND not eliminated
+    const finalWinnerIndices = winnerIndices.filter(index => !eliminatedIndices.includes(index));
+
     return {
         numbers: validNumbers,
         sum: sum,
         average: average,
         target: target,
-        winnerIndices: winnerIndices,
-        winnerPlayerIds: winnerIndices.map(index => playerIds[index])
+        minDiff: minDiff,
+        winnerIndices: finalWinnerIndices,
+        eliminatedIndices: eliminatedIndices,
+        winnerPlayerIds: finalWinnerIndices.map(index => playerIds[index]),
+        eliminatedPlayerIds: eliminatedIndices.map(index => playerIds[index])
     };
 }
 
@@ -243,21 +259,40 @@ wss.on('connection', (ws, req) => {
                     
                     if (allSubmitted) {
                         const result = calculateResult(numberRoomCode);
-                        
+
                         if (result) {
                             // Update wins for the winners
                             result.winnerPlayerIds.forEach(winnerId => {
                                 rooms[numberRoomCode].players[winnerId].wins += 1;
                             });
-                            
-                            // Broadcast the result to all players
+
+                            // Remove eliminated players from the room
+                            result.eliminatedPlayerIds.forEach(eliminatedId => {
+                                const eliminatedPlayer = rooms[numberRoomCode].players[eliminatedId];
+                                if (eliminatedPlayer) {
+                                    // Notify the eliminated player
+                                    eliminatedPlayer.ws.send(JSON.stringify({
+                                        type: 'eliminated',
+                                        message: 'Siz o\'yindan chiqarildingiz, chunki raqamingiz juda uzoq edi',
+                                        target: result.target
+                                    }));
+
+                                    // Close the eliminated player's connection
+                                    eliminatedPlayer.ws.close();
+
+                                    // Remove player from the room
+                                    delete rooms[numberRoomCode].players[eliminatedId];
+                                }
+                            });
+
+                            // Broadcast the result to remaining players
                             broadcastToRoom(numberRoomCode, {
                                 type: 'round_result',
                                 result: result,
                                 players: rooms[numberRoomCode].players // Include updated win counts
                             });
-                            
-                            // Reset for next round (but keep wins)
+
+                            // Reset for next round (but keep wins for remaining players)
                             Object.keys(rooms[numberRoomCode].players).forEach(playerId => {
                                 rooms[numberRoomCode].players[playerId].number = null;
                             });

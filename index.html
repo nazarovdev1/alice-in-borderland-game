@@ -758,6 +758,12 @@
                     goToHome();
                     break;
 
+                case 'eliminated':
+                    // Show elimination message and redirect to home
+                    alert(message.message + `\nTo'g'ri javob: ${message.target.toFixed(2)}`);
+                    goToHome();
+                    break;
+
                 case 'error':
                     alert(message.message);
                     break;
