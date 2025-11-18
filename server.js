@@ -34,10 +34,16 @@ function generateRoomCode() {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
+// Get admin player ID for a room
+function getAdminPlayerId(roomId) {
+    if (!rooms[roomId] || !rooms[roomId].players) return null;
+    return Object.keys(rooms[roomId].players).find(playerId => rooms[roomId].players[playerId].ws === rooms[roomId].adminId);
+}
+
 // Broadcast message to all players in a room
 function broadcastToRoom(roomId, message, excludeClient = null) {
     if (!rooms[roomId] || !rooms[roomId].players) return;
-    
+
     Object.keys(rooms[roomId].players).forEach(playerId => {
         const player = rooms[roomId].players[playerId];
         if (player.ws !== excludeClient && player.ws.readyState === WebSocket.OPEN) {
@@ -144,7 +150,8 @@ wss.on('connection', (ws, req) => {
                         roomCode: roomCode,
                         playerId: playerId,
                         playerName: message.playerName,
-                        players: rooms[roomCode].players
+                        players: rooms[roomCode].players,
+                        adminPlayerId: playerId
                     }));
                     
                     console.log(`Room ${roomCode} created by player ${playerId} named ${message.playerName}`);
@@ -192,7 +199,8 @@ wss.on('connection', (ws, req) => {
                             name: joinPlayerName,
                             wins: 0
                         },
-                        players: rooms[joinRoomCode].players
+                        players: rooms[joinRoomCode].players,
+                        adminPlayerId: getAdminPlayerId(joinRoomCode)
                     }, ws); // Exclude the joining player since they'll get the room_joined message instead
                     
                     // Send room info back to the joining player
@@ -201,7 +209,8 @@ wss.on('connection', (ws, req) => {
                         roomCode: joinRoomCode,
                         playerId: newPlayerId,
                         playerName: joinPlayerName,
-                        players: rooms[joinRoomCode].players
+                        players: rooms[joinRoomCode].players,
+                        adminPlayerId: getAdminPlayerId(joinRoomCode)
                     }));
                     
                     console.log(`Player ${newPlayerId} named ${joinPlayerName} joined room ${joinRoomCode}`);
@@ -232,7 +241,8 @@ wss.on('connection', (ws, req) => {
                     // Notify all players that the round has started
                     broadcastToRoom(startRoomCode, {
                         type: 'round_started',
-                        players: rooms[startRoomCode].players
+                        players: rooms[startRoomCode].players,
+                        adminPlayerId: getAdminPlayerId(startRoomCode)
                     });
                     
                     console.log(`Round started in room ${startRoomCode}`);
@@ -279,7 +289,8 @@ wss.on('connection', (ws, req) => {
                                     player.ws.send(JSON.stringify({
                                         type: 'round_result',
                                         result: result,
-                                        players: rooms[numberRoomCode].players // Include updated win counts
+                                        players: rooms[numberRoomCode].players, // Include updated win counts
+                                        adminPlayerId: getAdminPlayerId(numberRoomCode)
                                     }));
                                 }
 
@@ -307,6 +318,12 @@ wss.on('connection', (ws, req) => {
                                         const remainingPlayerIds = Object.keys(rooms[numberRoomCode].players);
                                         const newAdminId = remainingPlayerIds[0];
                                         rooms[numberRoomCode].adminId = rooms[numberRoomCode].players[newAdminId].ws;
+
+                                        // Notify remaining players about admin change
+                                        broadcastToRoom(numberRoomCode, {
+                                            type: 'admin_changed',
+                                            newAdminPlayerId: newAdminId
+                                        });
                                     }
                                 }
 
@@ -325,7 +342,8 @@ wss.on('connection', (ws, req) => {
                         broadcastToRoom(numberRoomCode, {
                             type: 'number_submitted',
                             playerId: numberPlayerId,
-                            players: rooms[numberRoomCode].players
+                            players: rooms[numberRoomCode].players,
+                            adminPlayerId: getAdminPlayerId(numberRoomCode)
                         });
                     }
                     break;
@@ -354,7 +372,8 @@ wss.on('connection', (ws, req) => {
                     // Notify all players that we're ready for a new round
                     broadcastToRoom(restartRoomCode, {
                         type: 'play_again',
-                        players: rooms[restartRoomCode].players
+                        players: rooms[restartRoomCode].players,
+                        adminPlayerId: getAdminPlayerId(restartRoomCode)
                     });
                     
                     console.log(`Play again initiated in room ${restartRoomCode}`);
@@ -401,7 +420,8 @@ wss.on('connection', (ws, req) => {
                     broadcastToRoom(kickRoomCode, {
                         type: 'player_kicked',
                         playerId: kickPlayerId,
-                        players: rooms[kickRoomCode].players
+                        players: rooms[kickRoomCode].players,
+                        adminPlayerId: getAdminPlayerId(kickRoomCode)
                     }, playerToKick.ws);
                     
                     // Close the kicked player's connection
@@ -447,6 +467,12 @@ wss.on('connection', (ws, req) => {
                     if (otherPlayerIds.length > 0) {
                         const newAdminId = otherPlayerIds[0];
                         room.adminId = room.players[newAdminId].ws;
+
+                        // Notify remaining players about admin change
+                        broadcastToRoom(roomCode, {
+                            type: 'admin_changed',
+                            newAdminPlayerId: newAdminId
+                        });
                     }
                 }
 
@@ -476,7 +502,8 @@ wss.on('connection', (ws, req) => {
                                 player.ws.send(JSON.stringify({
                                     type: 'round_result',
                                     result: result,
-                                    players: rooms[roomCode].players // Include updated win counts
+                                    players: rooms[roomCode].players, // Include updated win counts
+                                    adminPlayerId: getAdminPlayerId(roomCode)
                                 }));
                             }
 
@@ -523,7 +550,8 @@ wss.on('connection', (ws, req) => {
                     broadcastToRoom(roomCode, {
                         type: 'player_left',
                         playerId: playerIdToRemove,
-                        players: room.players
+                        players: room.players,
+                        adminPlayerId: getAdminPlayerId(roomCode)
                     });
                 } else {
                     // If room is now empty, delete it

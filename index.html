@@ -392,6 +392,63 @@
             margin-left: 5px;
         }
 
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: rgba(0, 0, 0, 0.9);
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid #4ecdc4;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #ff6b6b;
+        }
+
+        .close {
+            color: #ff6b6b;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #4ecdc4;
+            transform: rotate(90deg);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
         @media (max-width: 600px) {
             .container {
                 padding: 15px;
@@ -536,6 +593,22 @@
                 </div>
             </section>
         </main>
+
+        <!-- Modal for notifications -->
+        <div id="modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modalTitle">Notification</h3>
+                    <span id="closeModalBtn">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <p id="modalMessage"></p>
+                </div>
+                <div class="modal-footer" id="modalFooter">
+                    <!-- Buttons will be added here dynamically -->
+                </div>
+            </div>
+        </div>
     </div>
     
     <script>
@@ -575,6 +648,13 @@
         const backToLobbyBtn = document.getElementById('backToLobbyBtn');
         const adminPlayAgainContainer = document.getElementById('adminPlayAgainContainer');
 
+        // Modal elements
+        const modal = document.getElementById('modal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalFooter = document.getElementById('modalFooter');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+
         // O'yin holati
         let ws = null;
         let currentRoomCode = null;
@@ -596,12 +676,12 @@
             // Bosh ekran
             createRoomBtn.addEventListener('click', createRoom);
             joinRoomBtn.addEventListener('click', joinRoom);
-            
+
             // Lobby ekran
             startRoundBtn.addEventListener('click', startRound);
             playAgainBtn.addEventListener('click', playAgain);
             leaveRoomBtn.addEventListener('click', leaveRoom);
-            
+
             // O'yin ekran
             submitNumberBtn.addEventListener('click', submitNumber);
             numberInput.addEventListener('keypress', function(e) {
@@ -609,10 +689,32 @@
                     submitNumber();
                 }
             });
-            
+
             // Natijalar ekran
             adminPlayAgainBtn.addEventListener('click', playAgain);
             backToLobbyBtn.addEventListener('click', goToLobby);
+
+            // Modal
+            closeModalBtn.addEventListener('click', hideModal);
+        }
+
+        // Modal functions
+        function showModal(title, message, buttons = []) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modalFooter.innerHTML = '';
+            buttons.forEach(btn => {
+                const button = document.createElement('button');
+                button.className = btn.class || 'btn btn-secondary';
+                button.textContent = btn.text;
+                button.onclick = btn.callback;
+                modalFooter.appendChild(button);
+            });
+            modal.style.display = 'block';
+        }
+
+        function hideModal() {
+            modal.style.display = 'none';
         }
 
         // WebSocket serverga ulanish
@@ -682,44 +784,48 @@
                     currentPlayerId = message.playerId;
                     currentPlayerName = message.playerName;
                     players = message.players;
-                    isAdmin = true;
+                    isAdmin = message.adminPlayerId === currentPlayerId;
                     roomCodeDisplay.textContent = currentRoomCode;
                     updatePlayersList();
                     showScreen(lobbyScreen);
                     startRoundContainer.style.display = 'flex';
                     playAgainContainer.style.display = 'none';
                     break;
-                    
+
                 case 'room_joined':
                     currentRoomCode = message.roomCode;
                     currentPlayerId = message.playerId;
                     currentPlayerName = message.playerName;
                     players = message.players;
-                    isAdmin = false;
+                    isAdmin = message.adminPlayerId === currentPlayerId;
                     roomCodeDisplay.textContent = currentRoomCode;
                     updatePlayersList();
                     showScreen(lobbyScreen);
                     startRoundContainer.style.display = 'none';
                     playAgainContainer.style.display = 'none';
                     break;
-                    
+
                 case 'player_joined':
                     players = message.players;
+                    isAdmin = message.adminPlayerId === currentPlayerId;
                     updatePlayersList();
                     break;
-                    
+
                 case 'player_left':
                     delete players[message.playerId];
+                    isAdmin = message.adminPlayerId === currentPlayerId;
                     updatePlayersList();
                     break;
-                    
+
                 case 'player_kicked':
                     players = message.players;
+                    isAdmin = message.adminPlayerId === currentPlayerId;
                     updatePlayersList();
                     break;
-                    
+
                 case 'round_started':
                     players = message.players;
+                    isAdmin = message.adminPlayerId === currentPlayerId;
                     // Prevent eliminated players from going to game screen
                     if (isEliminated) {
                         // Stay on the current screen for eliminated players
@@ -733,14 +839,16 @@
                     numberInput.value = ''; // Input maydonini tozalash
                     resetGameScreen();
                     break;
-                    
+
                 case 'number_submitted':
                     players = message.players;
+                    isAdmin = message.adminPlayerId === currentPlayerId;
                     updateWaitingPlayers(message.playerId);
                     break;
-                    
+
                 case 'round_result':
                     players = message.players;
+                    isAdmin = message.adminPlayerId === currentPlayerId;
                     displayRoundResult(message.result);
                     showScreen(resultsScreen);
 
@@ -759,9 +867,10 @@
                     // Natijalarni ko'rsatish tugadi, foydalanuvchi o'z xoxishi bilan lobbyga o'tadi
                     // Avtomatik o'tish olib tashlandi
                     break;
-                    
+
                 case 'play_again':
                     players = message.players;
+                    isAdmin = message.adminPlayerId === currentPlayerId;
                     updatePlayersList();
                     // Only show lobby if not eliminated
                     if (!isEliminated) {
@@ -791,6 +900,20 @@
                     // They should not be able to participate in the next round
                     break;
                     
+                case 'admin_changed':
+                    isAdmin = message.newAdminPlayerId === currentPlayerId;
+                    // Update lobby start button if on lobby
+                    if (document.getElementById('lobbyScreen').classList.contains('active')) {
+                        startRoundContainer.style.display = isAdmin && !isEliminated ? 'flex' : 'none';
+                    }
+                    // Update results play again button if on results
+                    if (document.getElementById('resultsScreen').classList.contains('active') && isAdmin && !isEliminated) {
+                        adminPlayAgainContainer.style.display = 'block';
+                    } else {
+                        adminPlayAgainContainer.style.display = 'none';
+                    }
+                    break;
+
                 case 'error':
                     alert(message.message);
                     break;
@@ -876,7 +999,10 @@
         function goToLobby() {
             // Prevent eliminated players from going back to lobby to participate
             if (isEliminated) {
-                alert('Siz o\'yindan chiqarilgansiz, shuning uchun yangi o\'yinlarga qatnasha olmaysiz');
+                showModal('O\'yindan chiqarildingiz', 'Siz o\'yindan chiqarilgansiz, shuning uchun yangi o\'yinlarga qatnasha olmaysiz', [
+                    { text: 'Loyihadan chiqish', callback: () => { hideModal(); goToHome(); } },
+                    { text: 'Yopish', callback: hideModal }
+                ]);
                 // Stay on results screen but allow viewing
                 return;
             }
